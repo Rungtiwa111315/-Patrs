@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ระบบเบิก-รับอุปกรณ์ส่วนกลาง</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Prompt', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+
+    <div class="max-w-md mx-auto min-h-screen bg-white shadow-lg flex flex-col">
+        <header class="bg-blue-600 text-white p-4 text-center shadow">
+            <h1 class="text-xl font-bold">📦 ระบบสแกนเบิก-รับอุปกรณ์</h1>
+            <p class="text-xs text-blue-100">ศูนย์รวมข้อมูลทุกเครื่องจักร/อุปกรณ์</p>
+        </header>
+
+        <div class="flex border-b bg-gray-100">
+            <button onclick="switchTab('form')" id="tab-form" class="flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 bg-white">📝 ทำรายการ</button>
+            <button onclick="switchTab('admin')" id="tab-admin" class="flex-1 py-3 text-sm font-semibold text-gray-500">🔒 แอดมิน / ประวัติรวม</button>
+        </div>
+
+        <main class="p-4 flex-1">
+            
+            <!-- Tab 1: ฟอร์มพนักงาน -->
+            <div id="content-form" class="space-y-4">
+                <div id="itemInfoCard" class="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-1">
+                    <p class="text-xs text-blue-500 font-semibold">ข้อมูลอุปกรณ์ที่สแกน:</p>
+                    <h2 id="displayName" class="text-lg font-bold text-blue-900">กำลังโหลดข้อมูลอุปกรณ์...</h2>
+                    <p class="text-sm text-gray-600">รหัสอุปกรณ์: <span id="displayId" class="font-mono font-bold text-blue-700">-</span></p>
+                    <p class="text-sm text-gray-600">จุดใช้งาน (Location): <span id="displayLocation" class="font-medium text-gray-800">-</span></p>
+                    <p class="text-sm text-gray-600">สต็อกคงเหลือรวม: <span id="displayStock" class="font-bold text-blue-700">-</span> ชิ้น</p>
+                </div>
+
+                <form id="itemForm" onsubmit="handleSubmit(event)" class="space-y-4 hidden">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ประเภทรายการ</label>
+                        <div class="grid grid-cols-2 gap-2">
+                            <label class="flex items-center justify-center p-3 border rounded-lg cursor-pointer bg-red-50 border-red-200 text-red-700 font-medium">
+                                <input type="radio" name="type" value="OUT" checked class="mr-2"> เบิกออกไปใช้
+                            </label>
+                            <label class="flex items-center justify-center p-3 border rounded-lg cursor-pointer bg-green-50 border-green-200 text-green-700 font-medium">
+                                <input type="radio" name="type" value="IN" class="mr-2"> รับเข้าคลัง
+                            </label>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">จำนวน</label>
+                        <input type="number" id="qty" min="1" value="1" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">ชื่อ-นามสกุล ผู้ทำรายการ</label>
+                        <input type="text" id="user" placeholder="เช่น สมชาย ใจดี" required class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">หมายเหตุ</label>
+                        <input type="text" id="note" placeholder="เช่น เปลี่ยนตัวเก่าชำรุด" class="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                    </div>
+
+                    <button type="submit" id="submitBtn" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition shadow">
+                        ยืนยันการบันทึกข้อมูล
+                    </button>
+                </form>
+            </div>
+
+            <!-- Tab 2: แอดมิน -->
+            <div id="content-admin" class="hidden space-y-4">
+                <div id="adminLoginBox" class="bg-white p-6 border rounded-xl shadow-sm text-center space-y-4 mt-10">
+                    <div class="w-12 h-12 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto text-xl font-bold">🔒</div>
+                    <div>
+                        <h3 class="font-bold text-gray-800 text-base">เข้าสู่ระบบผู้ดูแลระบบ</h3>
+                        <p class="text-xs text-gray-500 mt-1">กรุณากรอกรหัสผ่านเพื่อจัดการข้อมูลและดูประวัติ</p>
+                    </div>
+                    <form onsubmit="handleAdminLogin(event)" class="space-y-3">
+                        <input type="password" id="adminPasswordInput" placeholder="กรอกรหัสผ่านแอดมิน" required class="w-full p-3 border rounded-lg text-center focus:ring-2 focus:ring-blue-500 outline-none">
+                        <button type="submit" class="w-full bg-blue-600 text-white py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition shadow text-sm">
+                            เข้าสู่ระบบ
+                        </button>
+                    </form>
+                </div>
+
+                <div id="adminDashboard" class="hidden space-y-4">
+                    <div class="bg-gray-100 p-3 rounded-lg flex justify-between items-center">
+                        <div>
+                            <h3 class="font-bold text-sm text-gray-700">ฐานข้อมูลส่วนกลาง</h3>
+                            <p class="text-xs text-gray-500">รวมประวัติทุกเครื่องไว้ที่เดียว</p>
+                        </div>
+                    </div>
+
+                    <div id="adminLogsContainer" class="space-y-2 text-sm max-h-[450px] overflow-y-auto">
+                        <p class="text-gray-500 text-center py-4">กำลังโหลดประวัติส่วนกลาง...</p>
+                    </div>
+                    
+                    <button onclick="handleAdminLogout()" class="w-full bg-gray-200 text-gray-600 py-2 rounded-lg text-xs font-medium hover:bg-gray-300">
+                        ออกจากระบบแอดมิน
+                    </button>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        // 🔴 ใส่ลิงก์ Google Apps Script Web App ของคุณที่นี่
+        const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbevW3skinLM8XWULpfcpop_QjYBRHW-aC9UmImudqHYXiOnZt2JOS2fX6QW0mLW9axl_A/exec";
+        
+        const ADMIN_PASS = "store.nftt";
+        let currentItemData = null;
+        let allLogsCache = [];
+        let isAdminLoggedIn = false;
+
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const currentScannedId = urlParams.get('id') || ''; 
+            if (currentScannedId) {
+                fetchItemData(currentScannedId);
+            } else {
+                document.getElementById('displayName').innerText = "กรุณาสแกน QR Code จากอุปกรณ์";
+            }
+        };
+
+        function switchTab(tab) {
+            if(tab === 'form') {
+                document.getElementById('content-form').classList.remove('hidden');
+                document.getElementById('content-admin').classList.add('hidden');
+                document.getElementById('tab-form').className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 bg-white";
+                document.getElementById('tab-admin').className = "flex-1 py-3 text-sm font-semibold text-gray-500";
+            } else {
+                document.getElementById('content-form').classList.add('hidden');
+                document.getElementById('content-admin').classList.remove('hidden');
+                document.getElementById('tab-admin').className = "flex-1 py-3 text-sm font-semibold text-blue-600 border-b-2 border-blue-600 bg-white";
+                document.getElementById('tab-form').className = "flex-1 py-3 text-sm font-semibold text-gray-500";
+                
+                if (isAdminLoggedIn) {
+                    loadAdminLogs();
+                }
+            }
+        }
+
+        function handleAdminLogin(e) {
+            e.preventDefault();
+            const passInput = document.getElementById('adminPasswordInput').value;
+            if (passInput === ADMIN_PASS) {
+                isAdminLoggedIn = true;
+                document.getElementById('adminLoginBox').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadAdminLogs();
+            } else {
+                alert('รหัสผ่านไม่ถูกต้อง!');
+                document.getElementById('adminPasswordInput').value = '';
+            }
+        }
+
+        function handleAdminLogout() {
+            isAdminLoggedIn = false;
+            document.getElementById('adminPasswordInput').value = '';
+            document.getElementById('adminDashboard').classList.add('hidden');
+            document.getElementById('adminLoginBox').classList.remove('hidden');
+        }
+
+        async function fetchItemData(id) {
+            try {
+                let res = await fetch(`${SCRIPT_URL}?action=getItem&id=${encodeURIComponent(id)}`);
+                let data = await res.json();
+                if(data.error) {
+                    document.getElementById('displayName').innerText = data.error;
+                    document.getElementById('displayId').innerText = id;
+                } else {
+                    currentItemData = data;
+                    document.getElementById('displayName').innerText = `${data.type} (${data.id})`;
+                    document.getElementById('displayId').innerText = data.id;
+                    document.getElementById('displayLocation').innerText = data.location || '-';
+                    document.getElementById('displayStock').innerText = data.stock;
+                    document.getElementById('itemForm').classList.remove('hidden');
+                }
+            } catch (err) {
+                document.getElementById('displayName').innerText = "เกิดข้อผิดพลาดในการโหลดข้อมูล";
+            }
+        }
+
+        async function handleSubmit(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = "กำลังบันทึกข้อมูล...";
+
+            const type = document.querySelector('input[name="type"]:checked').value;
+            const qtyVal = parseInt(document.getElementById('qty').value);
+            const payload = {
+                type: type,
+                itemId: currentItemData.id,
+                itemType: currentItemData.type,
+                location: currentItemData.location,
+                qty: qtyVal,
+                user: document.getElementById('user').value,
+                note: document.getElementById('note').value
+            };
+
+            try {
+                let response = await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload) });
+                let result = await response.json();
+                
+                if(result.status === 'success') {
+                    alert('บันทึกข้อมูลสำเร็จ!');
+                    
+                    if(type === 'IN') {
+                        currentItemData.stock += qtyVal;
+                    } else {
+                        currentItemData.stock -= qtyVal;
+                        if(currentItemData.stock < 0) currentItemData.stock = 0;
+                    }
+                    document.getElementById('displayStock').innerText = currentItemData.stock;
+                    
+                    document.getElementById('user').value = '';
+                    document.getElementById('note').value = '';
+                    document.getElementById('qty').value = '1';
+                } else {
+                    alert('เกิดข้อผิดพลาด: ' + result.message);
+                }
+            } catch (err) {
+                alert('เกิดข้อผิดพลาดในการเชื่อมต่อ');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "ยืนยันการบันทึกข้อมูล";
+            }
+        }
+
+        async function loadAdminLogs() {
+            const container = document.getElementById('adminLogsContainer');
+            container.innerHTML = '<p class="text-gray-500 text-center py-4">กำลังดึงข้อมูลประวัติ...</p>';
+            try {
+                let res = await fetch(`${SCRIPT_URL}?action=getLogs`);
+                allLogsCache = await res.json();
+                renderAdminLogs();
+            } catch (err) {
+                container.innerHTML = '<p class="text-red-500 text-center py-4">โหลดข้อมูลล้มเหลว</p>';
+            }
+        }
+
+        function renderAdminLogs() {
+            const container = document.getElementById('adminLogsContainer');
+            if(!allLogsCache || allLogsCache.length === 0) {
+                container.innerHTML = `<p class="text-gray-400 text-center py-6 text-xs">ยังไม่มีประวัติการบันทึก</p>`;
+                return;
+            }
+
+            container.innerHTML = '';
+            allLogsCache.forEach(log => {
+                container.innerHTML += `
+                    <div class="p-3 border rounded-lg bg-gray-50 shadow-sm space-y-1">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-bold text-xs text-gray-900">รหัส: ${log.itemId}</span>
+                                <span class="text-[10px] bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded ml-1">${log.type}</span>
+                            </div>
+                            <span class="font-bold text-xs text-blue-600">จำนวน: ${log.qty}</span>
+                        </div>
+                        <p class="text-xs text-gray-600">ผู้เบิก: <span class="font-medium">${log.user}</span> | หมายเหตุ: ${log.note || '-'}</p>
+                        <p class="text-[11px] text-gray-500">จุดใช้งาน: ${log.location || '-'}</p>
+                    </div>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>
